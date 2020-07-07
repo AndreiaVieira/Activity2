@@ -1,0 +1,99 @@
+---
+title: "Activity2"
+author: "Andreia Vieira"
+date: "05/07/2020"
+
+
+
+
+output:
+  slidy_presentation: default
+  ioslides_presentation: default
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Slide Week2
+
+```{r , echo = FALSE}
+
+
+library(leaflet)
+library(dplyr)
+
+
+# Leitura dos dados
+covid<-setwd("C:/Mana/ACursoCienciadeDados/Aulas/Desenvolvendo Dados/Projetos")
+covid<-read.csv("./COVID2019.csv", header=TRUE, sep=";")
+covid
+
+#Grupos
+covid <- covid %>%
+dplyr::mutate(grupo = cut(TAXACOVID, breaks = c(0, 500, 1000, 2000, Inf), labels = c("Abaixo de 500", "Entre 500 e 1000", "Entre 1000 e 2000", "Acima de 2000"))) 
+
+
+pal <- colorNumeric(
+  palette = "YlOrRd",
+  domain = covid$POPULACAO,
+)
+
+# Verificiar incidência da doença
+leaflet() %>%
+addTiles() %>%
+addCircleMarkers(data=covid, lat = ~LATITUDE, lng =~LONGITUDE, 
+                 radius = ~sqrt(covid$POPULACAO/1000),
+color=~pal(covid$POPULACAO),
+popup = ~htmltools::htmlEscape(covid$POPULACAO),
+stroke = FALSE, fillOpacity = 1)->map1
+
+
+map1%>% addLegend("topright", pal=pal ,  values = covid$POPULACAO,title = 'POPULACAO CENSO 2010 <br /> <center> - BAIRROS - MANAUS/AM ', opacity = 1) -> map2
+
+
+pal2<-colorFactor(c("#ffce00","#ff9a00","#EE4540","#933b27"), domain = covid$grupo, reverse = FALSE)
+                    
+                    
+pal3<- colorFactor(c("#E7305B"), domain = covid$POPULACAO, ordered = FALSE)
+  
+leaflet()%>%
+addTiles() %>%
+addCircleMarkers(data=covid,
+                 lat = ~LATITUDE, 
+                 lng = ~LONGITUDE, 
+                 radius = ~sqrt(covid$POPULACAO/1000),
+                 color = ~pal2(covid$grupo),                
+                 popup = ~htmltools::htmlEscape(covid$grupo),
+                 stroke = FALSE, fillOpacity = 1)->map3
+
+map3%>% addLegend("topright", pal = pal2 ,  values = covid$grupo,title = 'COVID19 - MANAUS/AM <br /> <center> - casos /100.000 hab <br> 02/07/2020', opacity = 1) -> map4
+
+library(htmltools)
+browsable(
+  tagList(list(
+    tags$head(
+      tags$style(
+        ".leaflet .legend {
+                 line-height: 20px;
+                 font-size: 12px;
+                 }",
+        ".leaflet .legend i{
+        
+            border-radius: 50%;
+            width:15px;
+            height: 15px;
+            margin-top: 2px;
+        } "
+       )
+     ),
+    map2, map4
+  ))
+)
+
+
+
+
+```
+
